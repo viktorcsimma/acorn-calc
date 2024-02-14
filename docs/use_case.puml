@@ -1,0 +1,52 @@
+@startuml use_case
+
+skinparam use_case {
+    'for actions that are directly connected to the actor
+    BackgroundColor<< Main >> YellowGreen
+}
+
+left to right direction
+
+actor :User:
+
+(Provide an input expression) as input<< Main >>
+(Use the numpad) as numpad
+(Use the keyboard) as keyboard
+(Enter the expression) as enter<< Main >>
+(Call the parser) as parser
+(Dosplay an error) as error
+(Calculate the real result) as calculate
+(Store variables) as store
+(Calculate an approximation) as calc_approx
+(Ask for long approximation) as ask_approx<< Main >>
+(Display approximation window) as approx_window
+(Set precision) as set_precision<< Main >>
+(Clear variables) as clear<< Main >>
+(Ask back) as ask_back
+
+User -> input
+User -> enter
+User -> ask_approx
+User -> set_precision
+User -> clear
+
+input ..> numpad : <<extends>>
+input ..> keyboard : <<extends>>
+
+input .down.> enter : <<precedes>>
+enter ..> parser : <<invokes>>
+parser ..> error: <<invokes>>
+parser ..> calculate: <<invokes>>
+calculate ..> calc_approx: <<precedes>>
+calculate ..> store: <<extends>>
+
+enter .down.> ask_approx: <<precedes>>
+ask_approx ..> approx_window: <<invokes>>
+ask_approx ..> calc_approx: <<invokes>>
+
+ask_approx .down.> set_precision: <<precedes>>
+
+enter .down.> clear: <<precedes>>
+clear ..> ask_back: <<invokes>>
+
+@enduml
