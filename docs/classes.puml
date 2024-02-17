@@ -3,7 +3,9 @@
 package View<<QML/C++>> #d1ffbd {
     class QMainWindow {
         - MainViewModel viewModel
+        ' the result also gets written here
         - TextField inputTextField
+        - TextField errorTextField
         - Rectangle numpad
         - ListView historyItems
         - QPushButton highPrecisionWindowButton
@@ -118,26 +120,52 @@ package Model<<Haskell>> #f9bfbf {
     }
 
     class CalcState<aq implements AppRational> {
-        variables :: IORef (Map String (C aq))  /'the names to the values'/
+        variables :: IORef (Map String (Value aq))  /'the names to the values'/
         ' the results of the previous calculations; from the last to the first
         ' I think these should be able to be accessed for later calculations
         ' there will be a special syntax for this
-        history :: IORef [C aq]
+        history :: IORef [Value aq]
         --
-        {static} evalExp :: Exp -> CalcState aq -> IO (CalcState aq)
+        ' returns an error message, or the result to be printed
+        {static} evalStatement :: Statement aq -> CalcState aq -> IO (Either String String)
+        ' returns an error message, or the value of the expression
+        {static} evalExp :: Exp aq -> CalcState aq -> Either String (Value aq)
         {static} clear :: CalcState aq -> IO (CalcState aq)
+    }
+
+    Interaction ..> CalcState
+    MainViewModel ..> Interaction
+}
+
+package Parser<<Agda>> #addfff {
+    class Statement<aq implements AppRational> {
+        --
+        [constructors Assign, If and While]
+        {static} parseStatement :: String -> Either String (Statement aq)
     }
 
     class Exp<aq implements AppRational> {
         [many constructors
         with different numbers of children]
         --
-        {static} parse :: String -> Maybe (Exp aq)
+        {static} parseExp :: String -> Either String (Exp aq)
     }
 
+    class Value<aq implements AppRational> {
+        --
+        <<constructors>>
+        {static} BoolValue :: Bool -> Value aq
+        {static} IntValue :: Integer -> Value aq
+        {static} RationalValue :: Rational -> Value aq
+        {static} RealValue :: C aq -> Value aq
+    }
+
+    CalcState ..> Statement
     CalcState ..> Exp
-    Interaction ..> CalcState
-    MainViewModel ..> Interaction
+    CalcState o-- Value
+    Statement o-- Statement
+    Statement o-- Exp
+    Exp o-- Exp
 }
 
 package Acorn<<Agda>> #addfff {
@@ -177,13 +205,13 @@ package Acorn<<Agda>> #addfff {
         {static} (:|^) :: Integer -> Integer -> Dyadic <<constructor>>
     }
 
-    CalcState o-- C
+    Exp o-- C: in some literals
+    Value o-- C: in real variables
     C *-- AppRational: in a sense
     PosRational *-- Rational
     AppRational <|-- Dyadic
     AppRational <|-- Rational
     C ..> PosRational
-    Exp o-- C: in literals
 }
 
 @enduml
