@@ -1,0 +1,189 @@
+@startuml classes
+
+package View<<QML/C++>> #d1ffbd {
+    class QMainWindow {
+        - MainViewModel viewModel
+        - TextField inputTextField
+        - Rectangle numpad
+        - ListView historyItems
+        - QPushButton highPrecisionWindowButton
+    }
+
+    class Rectangle
+
+    class ListView
+
+    class QPushButton {
+        ' this is built into Qt
+    }
+
+    class QCalcButton {
+        - CalcButtonViewModel viewModel
+
+        + QCalcButton (const CalcButtonViewModel viewModel,
+            QWidget *parent = nullptr)
+        + {override} void click()
+    }
+
+    class QHistoryItem {
+        - QLabel expression
+        - QLabel result
+
+        + QHistoryItem (const HistoryItem historyItem,
+            QWidget *parent = nullptr)
+    }
+
+    class QHighPrecisionWindow {
+        ' the parent is a QMainWindow
+        - QMainWindow *parent
+        - HighPrecisionViewModel viewModel
+        - QLabel result
+        - SpinBox precisionSpinBox
+    }
+
+    QPushButton <|-- QCalcButton
+    QMainWindow o-- Rectangle
+    QMainWindow o-- ListView
+    QMainWindow o-- QPushButton
+    QMainWindow <-- QHighPrecisionWindow
+    Rectangle o-- QCalcButton
+    ListView o-- QHistoryItem
+}
+
+package ViewModel<<C++>> #d1ffbd {
+    class MainViewModel {
+        - HsStablePointer calcState
+        - AppRationalMode mode {getter}
+        - string result {getter, setter}
+        - std::vector<HistoryItem> historyItems
+        - std::vector<CalcButtonViewModel> buttons
+
+        + enterExpression 
+    }
+
+    class HistoryItem {
+        - string expression {getter}
+        + HistoryItem(string expression, string result)
+    }
+
+    class CalcButtonViewModel {
+        - MainViewModel *parent
+        - string text {getter}
+        - string textToWrite {getter}
+        - int x, y {getter}
+        - int height, width {getter}
+
+        + CalcButtonViewModel(string text, string textToWrite,
+            int x, int y, int height, int width)
+        + void click()
+    }
+
+    enum AppRationalMode {
+        Dyadic
+        Rational
+    }
+
+    class HighPrecisionViewModel {
+        - MainViewModel *mainViewModel
+        - string result {getter}
+        - int precision {getter}
+
+        + HighPrecisionViewModel(MainViewModel *mainViewModel,
+            int initialPrecision)
+        + void setPrecision(int precision)
+    }
+
+    QMainWindow o-- MainViewModel
+    QHighPrecisionWindow o-- HighPrecisionViewModel
+    MainViewModel o-- AppRationalMode
+    MainViewModel o-- CalcButtonViewModel
+    MainViewModel o-- HistoryItem
+    HighPrecisionViewModel --> MainViewModel
+}
+
+package Model<<Haskell>> #f9bfbf {
+    class Interaction<<static>> {
+        --
+        ' a pointer is going to be passed to the C++ code
+        ' it is the C++ side's responsibility to free it
+        ' by calling destruct
+        {static} initDyadic :: IO (StablePtr (CalcState Dyadic))
+        {static} initRational :: IO (StablePtr (CalcState Rational))
+        ' this returns an error message if something went wrong;
+        ' otherwise the result in a string with the given precision
+        {static} evalCommand :: StablePtr (CalcState aq) -> CString -> CInt -> IO CString
+        ' reevaluates the previous result with a new precision
+        {static} reevalWithPrecision :: StablePtr (CalcState aq) -> CInt -> IO CString
+        {static} destruct :: StablePtr (CalcState aq) -> IO ()
+    }
+
+    class CalcState<aq implements AppRational> {
+        variables :: IORef (Map String (C aq))  /'the names to the values'/
+        ' the results of the previous calculations; from the last to the first
+        ' I think these should be able to be accessed for later calculations
+        ' there will be a special syntax for this
+        history :: IORef [C aq]
+        --
+        {static} evalExp :: Exp -> CalcState aq -> IO (CalcState aq)
+        {static} clear :: CalcState aq -> IO (CalcState aq)
+    }
+
+    class Exp<aq implements AppRational> {
+        [many constructors
+        with different numbers of children]
+        --
+        {static} parse :: String -> Maybe (Exp aq)
+    }
+
+    CalcState ..> Exp
+    Interaction ..> CalcState
+    MainViewModel ..> Interaction
+}
+
+package Acorn<<Agda>> #addfff {
+    ' These are only the things
+    ' that are to be directly used in the calculator.
+    ' There is going to be a complete plan
+    ' about all the types and typeclasses in Acorn.
+
+    interface AppRational {
+        --
+        [...]
+        {static} shift :: AppRational -> Integer -> AppRational
+        {static} appDiv :: AppRational -> AppRational -> Integer -> AppRational
+        {static} appApprox :: AppRational -> Integer -> AppRational
+    }
+
+    class C<aq implements AppRational> {
+        fun :: PosRational -> aq
+    }
+
+    class PosRational {
+        ' this is actually S0 Rational
+        unwrap :: Rational
+    }
+
+    class Rational {
+        num :: Integer
+        den :: Integer
+        --
+        {static} MkFrac :: Integer -> Integer -> Rational <<constructor>>
+    }
+
+    class Dyadic {
+        mant :: Integer
+        expo :: Integer
+        --
+        {static} (:|^) :: Integer -> Integer -> Dyadic <<constructor>>
+    }
+
+    CalcState o-- C
+    C *-- AppRational: in a sense
+    PosRational *-- Rational
+    AppRational <|-- Dyadic
+    AppRational <|-- Rational
+    C ..> PosRational
+    Exp o-- C: in literals
+}
+
+@enduml
