@@ -180,6 +180,8 @@ package Acorn<<Agda>> #addfff {
         {static} shift :: AppRational -> Integer -> AppRational
         {static} appDiv :: AppRational -> AppRational -> Integer -> AppRational
         {static} appApprox :: AppRational -> Integer -> AppRational
+        ' rounds to a given number of decimals
+        {static} decimalForm :: AppRational -> Integer -> String
     }
 
     class C<aq implements AppRational> {

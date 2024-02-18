@@ -38,6 +38,7 @@ data Exp a = BoolLiteral Bool           -- "true", "false"
            | GreaterEq (Exp a) (Exp a)   -- ">="
            -- variables
            | Var String                 -- string which is not a keyword and starts with a letter
+           | HistoryItem Int            -- history[n] where n is an index; history[0] is equivalent to Ans)
 
 data Statement a
            = Assign String (Exp a)      -- "=" (or implicitly "Ans = ...", when only an expression is given)
