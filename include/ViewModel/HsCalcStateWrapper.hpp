@@ -1,13 +1,18 @@
+#ifndef HS_CALC_STATE_WRAPPER_HPP_
+#define HS_CALC_STATE_WRAPPER_HPP_
+
 #include <string>
 
-#include "TinyHsFFI.h"
+#include <TinyHsFFI.h>
 #include "Acorn.h"
 
-enum RealBaseType {Dyadic, Rational};
+#include "ViewModel/RealBaseType.hpp"
 
 class HsCalcStateWrapper {
     private:
-    static const RealBaseType DEFAULT_BASE_TYPE = Dyadic;
+    static const RealBaseType DEFAULT_BASE_TYPE = DyadicBase;
+
+    // Indicates whether the Haskell r
 
     // A pointer to the Haskell CalcState object;
     // this is what will be passed to Haskell functions.
@@ -22,8 +27,8 @@ class HsCalcStateWrapper {
 
     public:
     // The constructor.
-    // This also initialises the Haskell runtime,
-    // creates the Haskell object and fetches its pointer.
+    // This creates the Haskell object and fetches its pointer.
+    // Beware: it assumes that the runtime has been initalised.
     HsCalcStateWrapper(RealBaseType baseType = DEFAULT_BASE_TYPE);
     // Executes a command and returns a string as a result,
     // in the format "0.12345 :: Rational".
@@ -31,14 +36,17 @@ class HsCalcStateWrapper {
     // The precision is given in the number of digits after the decimal point.
     std::string execCommand(const char* command, int precision) const;
     // Recalculates the last result with another precision.
+    // Note that this does _not_ have the side effects tthere possible were.
     std::string reevalCommand(int precision) const;
 
     // The destructor.
     // This also frees the StablePtr
-    // and shuts down the Haskell runtime.
+    // but does not shut down the runtime.
     ~HsCalcStateWrapper();
 
     // We delete the copy constructor and the assignment operator.
     HsCalcStateWrapper(const HsCalcStateWrapper& temp_obj) = delete; 
     HsCalcStateWrapper& operator=(const HsCalcStateWrapper& temp_obj) = delete; 
 };
+
+#endif
