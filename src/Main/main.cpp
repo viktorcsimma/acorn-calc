@@ -1,3 +1,4 @@
+#include "ViewModel/MainViewModel.hpp"
 #include "View/MainWindow.h"
 
 #include <QApplication>
@@ -11,6 +12,12 @@ int main(int argc, char *argv[])
     // First, we initialise the Haskell runtime.
     hs_init(&argc, &argv);
 
+    // By constructing the main view model,
+    // the HsCalcStateWrapper instance
+    // (and this way, the Haskell CalcState object)
+    // is also created.
+    MainViewModel mainViewModel(DyadicBase, 10);
+
     QApplication a(argc, argv);
 
     QTranslator translator;
@@ -22,7 +29,7 @@ int main(int argc, char *argv[])
             break;
         }
     }
-    MainWindow w;
+    MainWindow w(mainViewModel);
     w.show();
 
     int exitCode = a.exec();
