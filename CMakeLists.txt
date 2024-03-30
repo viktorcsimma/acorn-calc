@@ -13,7 +13,7 @@ find_package(Catch2 3 REQUIRED)
 include(GNUInstallDirs)
 include(/usr/local/${CMAKE_INSTALL_LIBDIR}/cmake/Acorn/AcornTargets.cmake)
 
-# For Qt
+# for Qt
 
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTOMOC ON)
@@ -24,6 +24,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets LinguistTools)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets LinguistTools)
+# for Qt Concurrent
+find_package(Qt6 REQUIRED COMPONENTS Concurrent)
 
 set(TS_FILES src/View/calc_en_GB.ts)
 
@@ -38,6 +40,10 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         src/View/HistoryItemWidget.ui
         include/View/HistoryItemWidget.h
         src/View/HistoryItemWidget.cpp
+        src/View/PreciseOutputWindow.ui
+        include/View/PreciseOutputWindow.h
+        src/View/PreciseOutputWindow.cpp
+
 
 
 
@@ -75,6 +81,9 @@ add_subdirectory(include)
 # should we also add headers later? it helps IDEs
 
 target_link_libraries(calc PRIVATE Qt${QT_VERSION_MAJOR}::Widgets)
+# for Qt Concurrent
+target_link_libraries(calc PRIVATE Qt6::Concurrent)
+
 target_link_libraries(test PRIVATE Catch2::Catch2)
 
 target_link_libraries(calc PRIVATE Acorn)

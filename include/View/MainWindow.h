@@ -23,7 +23,7 @@ public:
 public slots:
     void enterClicked();
     void settingsButtonClicked();
-    void highPrecisionButtonClicked();
+    void preciseOutputButtonClicked();
 
 private:
     Ui::MainWindow *ui;

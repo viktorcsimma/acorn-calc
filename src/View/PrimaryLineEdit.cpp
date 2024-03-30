@@ -20,7 +20,7 @@ void PrimaryLineEdit::addToText(const QString& str) {
 
     if (0 < str.length()) {
         // a space will not toggle the flag
-        if (containsResult && str != " ") {
+        if (containsResult) {
             containsResult = false;
             if (str.endsWith('(')) {
                 this->setText(str + "Ans");

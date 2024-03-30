@@ -2,6 +2,7 @@
 #include "View/ui_MainWindow.h"
 
 #include "View/HistoryItemWidget.h"
+#include "View/PreciseOutputWindow.h"
 
 MainWindow::MainWindow(MainViewModel& viewModel, QWidget *parent)
     : QMainWindow(parent)
@@ -12,7 +13,7 @@ MainWindow::MainWindow(MainViewModel& viewModel, QWidget *parent)
 
     // control buttons
     connect(ui->enterButton, &QPushButton::clicked, this, &MainWindow::enterClicked); // TODO: also connect Enter on keyboard
-    connect(ui->highPrecisionButton, &QPushButton::clicked, this, &MainWindow::highPrecisionButtonClicked);
+    connect(ui->preciseOutputButton, &QPushButton::clicked, this, &MainWindow::preciseOutputButtonClicked);
     connect(ui->settingsButton, &QPushButton::clicked, this, &MainWindow::settingsButtonClicked);
 
     // numpad buttons
@@ -83,11 +84,20 @@ void MainWindow::enterClicked()
         );
     }
 }
+
 void MainWindow::settingsButtonClicked()
 {
 
 }
-void MainWindow::highPrecisionButtonClicked()
-{
 
+void MainWindow::preciseOutputButtonClicked()
+{
+    PreciseOutputViewModel preciseOutputViewModel = viewModel.spawnPreciseOutputViewModel();
+    PreciseOutputWindow preciseOutputWindow(preciseOutputViewModel, this);
+
+    // this blocks;
+    // that is why the reference remains valid
+    preciseOutputWindow.exec();
+
+    qInfo("alive");
 }
