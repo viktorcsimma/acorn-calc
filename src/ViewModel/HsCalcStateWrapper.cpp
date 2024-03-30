@@ -1,18 +1,21 @@
 #include "ViewModel/HsCalcStateWrapper.hpp"
+#include "Acorn.h"
+
+#include <csignal> // for SIGINT
 
 // This creates the CalcState object
 // and returns the HsStablePtr.
 // It is only a separate function
 // because we need it for initialisation;
 // it should _not_ be used elsewhere.
-HsStablePtr initStablePtr(RealBaseType baseType) {
+static HsStablePtr initStablePtr(RealBaseType baseType) {
     return (DyadicBase == baseType)
          ? initCalcDyadic()
          : initCalcRational();
 }
 
 HsCalcStateWrapper::HsCalcStateWrapper(RealBaseType baseType):
-  calcStatePtr(initStablePtr(baseType)), baseType(baseType) {}
+    calcStatePtr(initStablePtr(baseType)), baseType(baseType), computationThread(nullptr) {}
 
 std::string
   HsCalcStateWrapper::execCommand(const char* command, int precision) const {
@@ -42,7 +45,25 @@ std::string HsCalcStateWrapper::reevalCommand(int precision) const {
     return toReturn;
 }
 
+bool HsCalcStateWrapper::interruptEvaluation() {
+    if (computationThread) {
+        // the SIGINT signal is handled on the Haskell side
+        // TODO: this is POSIX-specific;
+        // we should solve it on Windows too
+        pthread_kill(computationThread->native_handle(), SIGINT);
+        // let's join it; that is safer
+        // hopefully, it ends quickly
+        computationThread->join();
+
+        delete(computationThread);
+        computationThread = nullptr;
+        return true;
+    } else return false;
+}
+
 HsCalcStateWrapper::~HsCalcStateWrapper() {
+    interruptEvaluation();
+
     // there is no guarantee that a StablePtr is anything meaningful,
     // so we have to free it from Haskell
     if (DyadicBase == baseType) destructCalcDyadic(calcStatePtr);

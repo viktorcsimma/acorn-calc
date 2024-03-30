@@ -2,9 +2,9 @@
 #define HS_CALC_STATE_WRAPPER_HPP_
 
 #include <string>
+#include <thread>
 
 #include <TinyHsFFI.h>
-#include "Acorn.h"
 
 #include "ViewModel/RealBaseType.hpp"
 
@@ -24,11 +24,14 @@ class HsCalcStateWrapper {
     // with all variables lost.
     // (But there wouldn't be much demand, anyway.)
     const RealBaseType baseType;
+    // The thread running the actual reevalCommand,
+    // or nullptr if there is none.
+    std::thread* computationThread;
 
     public:
     // The constructor.
-    // This creates the Haskell object and fetches its pointer.
-    // Beware: it assumes that the runtime has been initalised.
+    // This also creates the Haskell object and fetches its pointer.
+    // Beware: it assumes that the runtime has already been initalised.
     HsCalcStateWrapper(RealBaseType baseType = DEFAULT_BASE_TYPE);
     // Executes a command and returns a string as a result,
     // in the format "0.12345 :: Rational".
@@ -38,9 +41,32 @@ class HsCalcStateWrapper {
     // Recalculates the last result with another precision.
     // Note that this does _not_ have the side effects tthere possible were.
     std::string reevalCommand(int precision) const;
+    // Runs reevalCommand() asynchronously, on a new thread
+    // and executes the given function with the result string as the parameter on the same thread
+    // after this is done.
+    // Finally, it frees the pointer and sets it to nullptr.
+    template<class StringFunction>
+    void reevalCommandAsync(int precision, StringFunction onFinish) {
+        if (computationThread) {
+            // huh... that means there is still a running process
+            // let's join it for now
+            computationThread->join();
+            // then, there is no other thread which could access the pointer (hopefully)
+            delete(computationThread);
+        }
+        computationThread = new std::thread([=]() {
+            std::string result = reevalCommand(precision);
+            onFinish(result);
+        });
+    }
+    // Interrupts the current computation, joins it until it stops gracefully
+    // and returns true if there was one;
+    // returns false otherwise.
+    // Also frees the computationThread pointer and sets it to nullptr.
+    bool interruptEvaluation();
 
     // The destructor.
-    // This also frees the StablePtr
+    // This also runs interruptEvaluation() and frees the StablePtr
     // but does not shut down the runtime.
     ~HsCalcStateWrapper();
 

@@ -41,7 +41,7 @@ class MainViewModel {
         // bound to the same HsCalcStateWrapper,
         // with the same precision
         // (as we need not reevaluate immediately this way).
-        PreciseOutputViewModel spawnPreciseOutputViewModel();
+        PreciseOutputViewModel spawnPreciseOutputViewModel() const;
         // Sets a new precision for future results
         // (this does _not_ recalculate history items,
         //  nor the current result).

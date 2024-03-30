@@ -42,7 +42,7 @@ void MainViewModel::switchMode(RealBaseType realBaseType) {
     }
 }
 
-PreciseOutputViewModel MainViewModel::spawnPreciseOutputViewModel() {
+PreciseOutputViewModel MainViewModel::spawnPreciseOutputViewModel() const {
     return PreciseOutputViewModel(calcStateWrapper, precision, primaryText);
 }
 

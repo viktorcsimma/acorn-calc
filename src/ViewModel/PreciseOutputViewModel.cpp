@@ -13,6 +13,10 @@ void PreciseOutputViewModel::setPrecision(int precision) {
     result = calcStateWrapper->reevalCommand(precision);
 }
 
+int PreciseOutputViewModel::getPrecision() const {
+    return precision;
+}
+
 const std::string& PreciseOutputViewModel::getResult() const {
     return result;
 }
