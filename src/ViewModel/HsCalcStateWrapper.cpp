@@ -1,8 +1,6 @@
 #include "ViewModel/HsCalcStateWrapper.hpp"
 #include "Acorn.h"
 
-#include <csignal> // for SIGINT
-
 // This creates the CalcState object
 // and returns the HsStablePtr.
 // It is only a separate function
@@ -47,10 +45,8 @@ std::string HsCalcStateWrapper::reevalCommand(int precision) const {
 
 bool HsCalcStateWrapper::interruptEvaluation() {
     if (computationThread) {
-        // the SIGINT signal is handled on the Haskell side
-        // TODO: this is POSIX-specific;
-        // we should solve it on Windows too
-        pthread_kill(computationThread->native_handle(), SIGINT);
+        // this is defined in Acorn.h
+        acornInterruptEvaluation();
         // let's join it; that is safer
         // hopefully, it ends quickly
         computationThread->join();

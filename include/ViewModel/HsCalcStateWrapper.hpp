@@ -4,7 +4,7 @@
 #include <string>
 #include <thread>
 
-#include <TinyHsFFI.h>
+#include "TinyHsFFI.h"
 
 #include "ViewModel/RealBaseType.hpp"
 

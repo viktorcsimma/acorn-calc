@@ -5,7 +5,7 @@
 #include <QLocale>
 #include <QTranslator>
 
-#include <TinyHsFFI.h>
+//#include <TinyHsFFI.h>
 
 int main(int argc, char *argv[])
 {
@@ -29,6 +29,7 @@ int main(int argc, char *argv[])
             break;
         }
     }
+
     MainWindow w(mainViewModel);
     w.show();
 

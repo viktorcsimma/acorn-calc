@@ -3,7 +3,7 @@
 // before the tests
 // and shuts it down in the end.
 
-#include <TinyHsFFI.h>
+#include "TinyHsFFI.h"
 #include <catch2/catch_session.hpp>
 
 int main( int argc, char* argv[] ) {
