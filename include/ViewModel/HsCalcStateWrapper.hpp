@@ -24,9 +24,12 @@ class HsCalcStateWrapper {
     // with all variables lost.
     // (But there wouldn't be much demand, anyway.)
     const RealBaseType baseType;
-    // The thread running the actual reevalCommand,
-    // or nullptr if there is none.
-    std::thread* computationThread;
+    // The thread running the actual reevalCommand
+    // (if isEvaluating is false, it has either terminated or is invalid;
+    // see joinable()).
+    std::thread evaluationThread;
+    // Whether there is an asynchronous evaluation in progress.
+    bool isEvaluating;
 
     public:
     // The constructor.
@@ -44,25 +47,21 @@ class HsCalcStateWrapper {
     // Runs reevalCommand() asynchronously, on a new thread
     // and executes the given function with the result string as the parameter on the same thread
     // after this is done.
-    // Finally, it frees the pointer and sets it to nullptr.
     template<class StringFunction>
     void reevalCommandAsync(int precision, StringFunction onFinish) {
-        if (computationThread) {
-            // huh... that means there is still a running process
-            // let's join it for now
-            computationThread->join();
-            // then, there is no other thread which could access the pointer (hopefully)
-            delete(computationThread);
-        }
-        computationThread = new std::thread([=]() {
+        // destructing a thread is not safe if it is joinable;
+        // even if it has terminated
+        if (evaluationThread.joinable()) evaluationThread.join();
+        isEvaluating = true;
+        evaluationThread = std::thread([=]() {
             std::string result = reevalCommand(precision);
             onFinish(result);
+            isEvaluating = false;
         });
     }
     // Interrupts the current computation, joins it until it stops gracefully
     // and returns true if there was one;
     // returns false otherwise.
-    // Also frees the computationThread pointer and sets it to nullptr.
     bool interruptEvaluation();
 
     // The destructor.

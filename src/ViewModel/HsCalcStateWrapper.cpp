@@ -13,7 +13,8 @@ static HsStablePtr initStablePtr(RealBaseType baseType) {
 }
 
 HsCalcStateWrapper::HsCalcStateWrapper(RealBaseType baseType):
-    calcStatePtr(initStablePtr(baseType)), baseType(baseType), computationThread(nullptr) {}
+    // an std::thread with an empty constructor does not really represent a thread
+    calcStatePtr(initStablePtr(baseType)), baseType(baseType), evaluationThread(), isEvaluating(false) {}
 
 std::string
   HsCalcStateWrapper::execCommand(const char* command, int precision) const {
@@ -44,15 +45,14 @@ std::string HsCalcStateWrapper::reevalCommand(int precision) const {
 }
 
 bool HsCalcStateWrapper::interruptEvaluation() {
-    if (computationThread) {
+    if (isEvaluating) {
         // this is defined in Acorn.h
         acornInterruptEvaluation();
         // let's join it; that is safer
         // hopefully, it ends quickly
-        computationThread->join();
+        evaluationThread.join();
 
-        delete(computationThread);
-        computationThread = nullptr;
+        isEvaluating = false;
         return true;
     } else return false;
 }

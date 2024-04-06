@@ -98,6 +98,4 @@ void MainWindow::preciseOutputButtonClicked()
     // this blocks;
     // that is why the reference remains valid
     preciseOutputWindow.exec();
-
-    qInfo("alive");
 }
