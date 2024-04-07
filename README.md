@@ -9,7 +9,7 @@ and is capable of printing results with an arbitrary precision.
 You will need:
 - Acorn (see the instructions [there](https://github.com/viktorcsimma/acorn))
 - Catch2 (for the tests)
-- Qt
+- Qt (preferably built from source, with the `-static` and `-bundled-xcb-input` options – see later)
 
 **Note:** it is essential that everything gets compiled with the same compiler.
 On Windows, GHC 9.4.8 uses Clang 14 as its C backend;
@@ -27,3 +27,20 @@ so it had to be installed separately.)
 
 On Ubuntu, the defaults worked for me
 (I used GCC).
+
+## Deployment
+
+For me, the most sympathetic solution was to link the executable statically
+so that it could run anywhere without any additional libraries.
+
+On Ubuntu, you have to install the packages listed
+in [this article](https://doc.qt.io/qt-6/linux-requirements.html)
+of the documentation
+(the part after _"we recommend that you install the following packages..."_).
+Only _then_ should you proceed with building Qt.
+
+So follow the instructions on building Qt from source,
+except that you also provide the `-static` and `-bundled-xcb-xinput` options
+for `configure`.
+With Qt built this way, it worked for me both on Windows and Ubuntu.
+
