@@ -12,7 +12,7 @@ MainWindow::MainWindow(MainViewModel& viewModel, QWidget *parent)
     ui->setupUi(this);
 
     // control buttons
-    connect(ui->enterButton, &QPushButton::clicked, this, &MainWindow::enterClicked); // TODO: also connect Enter on keyboard
+    connect(ui->enterButton, &QPushButton::clicked, this, &MainWindow::enterClicked);
     connect(ui->preciseOutputButton, &QPushButton::clicked, this, &MainWindow::preciseOutputButtonClicked);
     connect(ui->settingsButton, &QPushButton::clicked, this, &MainWindow::settingsButtonClicked);
 
@@ -52,9 +52,6 @@ MainWindow::MainWindow(MainViewModel& viewModel, QWidget *parent)
 
     // history elements
     connect(ui->ansButton, &QPushButton::clicked, ui->primaryLineEdit, [=](){ui->primaryLineEdit->addToText("Ans");});
-
-    // the numpad's Enter button
-    connect(ui->enterButton, &QPushButton::clicked, this, &MainWindow::enterClicked);
 
     // connect keyboard Enter in the line edit to the corresponding slot
     connect(ui->primaryLineEdit, &QLineEdit::returnPressed, this, &MainWindow::enterClicked);
