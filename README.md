@@ -33,6 +33,8 @@ On Ubuntu, the defaults worked for me
 For me, the most sympathetic solution was to link the executable statically
 so that it could run anywhere without any additional libraries.
 
+### Ubuntu
+
 On Ubuntu, you have to install the packages listed
 in [this article](https://doc.qt.io/qt-6/linux-requirements.html)
 of the documentation
@@ -42,5 +44,16 @@ Only _then_ should you proceed with building Qt.
 So follow the instructions on building Qt from source,
 except that you also provide the `-static` and `-bundled-xcb-xinput` options
 for `configure`.
-With Qt built this way, it worked for me both on Windows and Ubuntu.
+
+For a bundle that works on other machines,
+you have to include certain Linux shared libraries.
+But remember _not_ to include every dependency `ldd` lists
+as these would trump system-specific libraries
+and this causes bad things to happen.
+
+[This bundle](http://csimmaviktor.web.elte.hu/calc.zip)
+seems to work.
+Include these libraries and the start script with the executable
+and you are ready to go.
+Run `calc.sh` to start; this sets the path to the libraries.
 
