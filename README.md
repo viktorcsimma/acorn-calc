@@ -44,6 +44,7 @@ Only _then_ should you proceed with building Qt.
 So follow the instructions on building Qt from source,
 except that you also provide the `-static` and `-bundled-xcb-xinput` options
 for `configure`.
+Then build the release executable with this Qt installation.
 
 For a bundle that works on other machines,
 you have to include certain Linux shared libraries.
@@ -51,9 +52,23 @@ But remember _not_ to include every dependency `ldd` lists
 as these would trump system-specific libraries
 and this causes bad things to happen.
 
-[This bundle](http://csimmaviktor.web.elte.hu/calc.zip)
+[This bundle](http://csimmaviktor.web.elte.hu/calc_linux.zip)
 seems to work.
 Include these libraries and the start script with the executable
 and you are ready to go.
 Run `calc.sh` to start; this sets the path to the libraries.
+
+### Windows
+
+This is easier.
+
+Build Qt as above and build the release executable with it.
+After that, you only need two DLLs from the MinGW directory:
+`libc++.dll` and `libunwind.dll`.
+But if you use a different MinGW,
+you can copy the executable into Windows Sandbox
+and see what libraries it misses.
+
+For a working example, see
+[this bundle](http://csimmaviktor.web.elte.hu/calc_windows.zip).
 
