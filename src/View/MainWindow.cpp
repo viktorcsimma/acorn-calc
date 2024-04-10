@@ -14,7 +14,8 @@ MainWindow::MainWindow(MainViewModel& viewModel, QWidget *parent)
     // control buttons
     connect(ui->enterButton, &QPushButton::clicked, this, &MainWindow::enterClicked);
     connect(ui->preciseOutputButton, &QPushButton::clicked, this, &MainWindow::preciseOutputButtonClicked);
-    connect(ui->settingsButton, &QPushButton::clicked, this, &MainWindow::settingsButtonClicked);
+    // this when settingsButton has been readded
+    // connect(ui->settingsButton, &QPushButton::clicked, this, &MainWindow::settingsButtonClicked);
 
     // numpad buttons
     connect(ui->numButton0, &QPushButton::clicked, ui->primaryLineEdit, [=](){ui->primaryLineEdit->addToText("0");});
@@ -52,6 +53,7 @@ MainWindow::MainWindow(MainViewModel& viewModel, QWidget *parent)
 
     // history elements
     connect(ui->ansButton, &QPushButton::clicked, ui->primaryLineEdit, [=](){ui->primaryLineEdit->addToText("Ans");});
+    connect(ui->historyButton, &QPushButton::clicked, ui->primaryLineEdit, [=](){ui->primaryLineEdit->addToText("history[");});
 
     // connect keyboard Enter in the line edit to the corresponding slot
     connect(ui->primaryLineEdit, &QLineEdit::returnPressed, this, &MainWindow::enterClicked);
@@ -71,7 +73,7 @@ void MainWindow::enterClicked()
     std::string command(ui->primaryLineEdit->text().toStdString());
     viewModel.enterCommand(command.c_str());
     ui->secondaryOutputLabel->setText(QString::fromStdString(viewModel.getSecondaryText()));
-    if ("error" != viewModel.getSecondaryText().substr(0, 6)) {
+    if ("error" != viewModel.getSecondaryText().substr(0, 5)) {
         ui->primaryLineEdit->setResult(QString::fromStdString(viewModel.getPrimaryText()));
 
         // adding item to history list
