@@ -39,6 +39,7 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         src/View/PreciseOutputWindow.ui
         include/View/PreciseOutputWindow.h
         src/View/PreciseOutputWindow.cpp
+        assets/busy_indicator.gif
 
 
 
@@ -109,6 +110,11 @@ target_include_directories(test
 if("Linux" STREQUAL ${CMAKE_SYSTEM_NAME} OR "Darwin" STREQUAL ${CMAKE_SYSTEM_NAME})
   target_link_options(calc PRIVATE -fuse-ld=gold -no-pie -fno-PIC -lstdc++ -ltinfo -lrt -lutil -ldl -lpthread -lgmp)
   target_link_options(test PRIVATE -fuse-ld=gold -no-pie -fno-PIC -lstdc++ -ltinfo -lrt -lutil -ldl -lpthread -lgmp)
+  if(CMAKE_BUILD_TYPE MATCHES RELEASE)
+      # we tell the dynamic linker to search for shared libraries in the folder of the executable itself
+      # this way, we can bundle the remaining libraries with the application
+      target_link_options(calc PRIVATE -rpath=.)
+  endif()
 elseif("Windows" STREQUAL ${CMAKE_SYSTEM_NAME})
   target_link_options(calc PRIVATE -fuse-ld=lld -pthread -fno-PIC)
   target_link_options(test PRIVATE -fuse-ld=lld -pthread -fno-PIC)
@@ -120,11 +126,17 @@ else()
   message( FATAL_ERROR "Unsupported operating system: ${CMAKE_SYSTEM_NAME}" )
 endif()
 
+# copying assets
+file(COPY assets DESTINATION ${CMAKE_BINARY_DIR})
+# and installing them, if it is about an installation
+install(DIRECTORY assets DESTINATION ${CMAKE_BINARY_DIR})
+
 install(TARGETS calc
     BUNDLE DESTINATION .
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
+
 
 if(QT_VERSION_MAJOR EQUAL 6)
     qt_finalize_executable(calc)
