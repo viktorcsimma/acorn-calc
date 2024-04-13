@@ -58,7 +58,8 @@ bool HsCalcStateWrapper::interruptEvaluation() {
 }
 
 HsCalcStateWrapper::~HsCalcStateWrapper() {
-    interruptEvaluation();
+    if (isEvaluating) interruptEvaluation();
+    else if (evaluationThread.joinable()) evaluationThread.detach(); // we have to join or detach it before destruction
 
     // there is no guarantee that a StablePtr is anything meaningful,
     // so we have to free it from Haskell

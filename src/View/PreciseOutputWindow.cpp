@@ -31,6 +31,9 @@ PreciseOutputWindow::PreciseOutputWindow(PreciseOutputViewModel& viewModel, QWid
     connect(ui->evaluateButton, &QPushButton::clicked, this, &PreciseOutputWindow::evaluateButtonClicked);
     // we do this in order to ensure that onEvaluationFinished runs in the main thread
     connect(this, &PreciseOutputWindow::evaluationFinished, this, &PreciseOutputWindow::onEvaluationFinished);
+
+    // and put the spinbox into focus so that we can start giving the precision
+    ui->spinBox->setFocus();
 }
 
 PreciseOutputWindow::~PreciseOutputWindow() {
@@ -51,8 +54,12 @@ void PreciseOutputWindow::enterKeyPressed()
 
 void PreciseOutputWindow::onEvaluationFinished()
 {
-    // TODO: set the progress circle
-    ui->textEdit->setText(QString::fromStdString(viewModel.getResult()));
+    std::string result = viewModel.getResult();
+    if (result.find("interrupted") == result.npos) { // that means it does not contain that
+        ui->textEdit->setText(QString::fromStdString(viewModel.getResult()));
+    } else {
+        ui->textEdit->setText("Interrupted.\nChoose a new precision and click \"Evaluate\" again.");
+    }
     ui->evaluateButton->setText("Evaluate");
     ui->evaluateButton->setEnabled(true);
     ui->busyIndicatorLabel->setVisible(false);

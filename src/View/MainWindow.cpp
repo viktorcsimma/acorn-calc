@@ -4,6 +4,8 @@
 #include "View/HistoryItemWidget.h"
 #include "View/PreciseOutputWindow.h"
 
+#include <QKeyEvent>
+
 MainWindow::MainWindow(MainViewModel& viewModel, QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
@@ -54,6 +56,7 @@ MainWindow::MainWindow(MainViewModel& viewModel, QWidget *parent)
     // history elements
     connect(ui->ansButton, &QPushButton::clicked, ui->primaryLineEdit, [=](){ui->primaryLineEdit->addToText("Ans");});
     connect(ui->historyButton, &QPushButton::clicked, ui->primaryLineEdit, [=](){ui->primaryLineEdit->addToText("history[");});
+    connect(ui->rightSquareBracketButton, &QPushButton::clicked, ui->primaryLineEdit, [=](){ui->primaryLineEdit->addToText("]");});
 
     // connect keyboard Enter in the line edit to the corresponding slot
     connect(ui->primaryLineEdit, &QLineEdit::returnPressed, this, &MainWindow::enterClicked);
@@ -70,17 +73,23 @@ MainWindow::~MainWindow()
 
 void MainWindow::enterClicked()
 {
-    std::string command(ui->primaryLineEdit->text().toStdString());
-    viewModel.enterCommand(command.c_str());
-    ui->secondaryOutputLabel->setText(QString::fromStdString(viewModel.getSecondaryText()));
-    if ("error" != viewModel.getSecondaryText().substr(0, 5)) {
-        ui->primaryLineEdit->setResult(QString::fromStdString(viewModel.getPrimaryText()));
+    // Beware: they might be pressing enter again!
+    // Let a double enter be a shortcut for opening the precise output window.
+    if (ui->primaryLineEdit->containsResult()) {
+        preciseOutputButtonClicked();
+    } else {
+        std::string command(ui->primaryLineEdit->text().toStdString());
+        viewModel.enterCommand(command.c_str());
+        ui->secondaryOutputLabel->setText(QString::fromStdString(viewModel.getSecondaryText()));
+        if ("error" != viewModel.getSecondaryText().substr(0, 5)) {
+            ui->primaryLineEdit->setResult(QString::fromStdString(viewModel.getPrimaryText()));
 
-        // adding item to history list
-        ui->historyVerticalLayoutWidget->layout()->addWidget(
-            new HistoryItemWidget(QString::fromStdString(command),
-                                  ui->primaryLineEdit->text() + " :: " + ui->secondaryOutputLabel->text(), ui->historyVerticalLayoutWidget)
-        );
+            // adding item to history list
+            ui->historyVerticalLayoutWidget->layout()->addWidget(
+                new HistoryItemWidget(QString::fromStdString(command),
+                                      ui->primaryLineEdit->text() + " :: " + ui->secondaryOutputLabel->text(), ui->historyVerticalLayoutWidget)
+                );
+        }
     }
 }
 
@@ -97,4 +106,7 @@ void MainWindow::preciseOutputButtonClicked()
     // this blocks;
     // that is why the reference remains valid
     preciseOutputWindow.exec();
+
+    // and when it closes:
+    ui->primaryLineEdit->setFocus();
 }

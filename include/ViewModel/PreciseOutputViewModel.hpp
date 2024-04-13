@@ -16,6 +16,9 @@ class PreciseOutputViewModel {
         int precision;
         std::string result;
 
+        // Cuts the type information from the end of the result string.
+        void trimTypeNameFromResult();
+
     public:
         // Gets a pointer to an already-initialised HsCalcStateWrapper
         // which does _not_ get freed on destruction.
@@ -32,6 +35,7 @@ class PreciseOutputViewModel {
         void setPrecisionAsync(int precision, F onFinished) {
             calcStateWrapper->reevalCommandAsync(precision, [=](std::string result) {
                 this->result = result;
+                trimTypeNameFromResult();
                 this->precision = precision;
                 onFinished();
             });

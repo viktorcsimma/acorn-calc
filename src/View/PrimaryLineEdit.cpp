@@ -1,15 +1,43 @@
 #include "View/PrimaryLineEdit.h"
+#include "View/MainWindow.h"
+
+#include <QKeyEvent>
 
 PrimaryLineEdit::PrimaryLineEdit(QWidget*& parent):
-    QLineEdit(parent), containsResult(false) {}
+    QLineEdit(parent), containsResult_(false) {
+}
+
+void PrimaryLineEdit::keyPressEvent(QKeyEvent* e) {
+    QLineEdit::keyPressEvent(e);
+
+    if (containsResult_) {
+        // if it was a special key:
+        if (e->text().isEmpty()) {
+            if (Qt::Key_Delete == e->key() || Qt::Key_Backspace == e->key()) {
+                setText("");
+                setBold(false);
+                containsResult_ = false;
+            }
+        } else { // if there was a text input:
+            addToText(e->text());
+        }
+    }
+}
+
+void PrimaryLineEdit::setBold(bool enabled) {
+    QFont boldFont = this->font();
+    boldFont.setBold(enabled);
+    this->setFont(boldFont);
+}
 
 void PrimaryLineEdit::mousePressEvent(QMouseEvent* e) {
-    if (containsResult) {
+    if (containsResult_) {
         // then we change the text to Ans
         // so that the user can calculate with the real result
         // instead of the approximation
         this->setText("Ans ");
-        containsResult = false;
+        this->setBold(false);
+        containsResult_ = false;
     }
 
     QLineEdit::mousePressEvent(e);
@@ -18,10 +46,13 @@ void PrimaryLineEdit::mousePressEvent(QMouseEvent* e) {
 void PrimaryLineEdit::addToText(const QString& str) {
     this->setFocus();
 
-    if (0 < str.length()) {
-        // a space will not toggle the flag
-        if (containsResult) {
-            containsResult = false;
+    // for some reason, on an enter, this gets called with "\r"
+    // so we have to do something about it
+    if (0 < str.length() && "\r" != str) {
+        // a space or enter will not toggle the flag
+        if (containsResult_) {
+            this->setBold(false);
+            containsResult_ = false;
             if (str.endsWith('(')) {
                 this->setText(str + "Ans");
             } else if (str.at(0).isLetterOrNumber()) {
@@ -37,5 +68,16 @@ void PrimaryLineEdit::addToText(const QString& str) {
 
 void PrimaryLineEdit::setResult(const QString& str) {
     this->setText(str);
-    containsResult = true;
+    this->setBold(true);
+    containsResult_ = true;
+}
+
+void PrimaryLineEdit::setBack() {
+    this->setText("");
+    this->setBold(false);
+    containsResult_ = false;
+}
+
+bool PrimaryLineEdit::containsResult() const {
+    return containsResult_;
 }

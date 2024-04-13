@@ -6,6 +6,15 @@
 #include <catch2/reporters/catch_reporter_event_listener.hpp>
 #include <catch2/reporters/catch_reporter_registrars.hpp>
 
+/* this will be nice for a test case
+{
+    HsCalcStateWrapper calcStateWrapper(DyadicBase);
+    calcStateWrapper.execCommand("pi", 10);
+    calcStateWrapper.reevalCommandAsync(100000, [](std::string result) {printf("%s\n", result.c_str());});
+    calcStateWrapper.interruptEvaluation();
+}
+*/
+
 // We will use these quite often.
 // See https://stackoverflow.com/questions/4770985/how-to-check-if-a-string-starts-with-another-string-in-c/4770992#4770992.
 bool startsWith(const char* haystack, const char* needle) {

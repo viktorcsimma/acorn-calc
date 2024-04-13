@@ -11,6 +11,7 @@ void PreciseOutputViewModel::setPrecision(int precision) {
     this->precision = precision;
     // this does not have side effects
     result = calcStateWrapper->reevalCommand(precision);
+    trimTypeNameFromResult();
 }
 
 int PreciseOutputViewModel::getPrecision() const {
@@ -19,4 +20,8 @@ int PreciseOutputViewModel::getPrecision() const {
 
 const std::string& PreciseOutputViewModel::getResult() const {
     return result;
+}
+
+void PreciseOutputViewModel::trimTypeNameFromResult() {
+    result = result.substr(0, result.find(" :: "));
 }
