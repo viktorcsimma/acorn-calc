@@ -11,6 +11,14 @@ PreciseOutputWindow::PreciseOutputWindow(PreciseOutputViewModel& viewModel, QWid
 {
     ui->setupUi(this);
 
+#if defined(WIN32) || defined(__APPLE__)
+    // Windows and OS X do not use the Button field of the colour palette;
+    // so we have to paint the special buttons using stylesheets.
+    // But setting the background colour is not too native-feeling here;
+    // so let's just give a bold text.
+    ui->evaluateButton->setStyleSheet("font-weight: bold; color: unset");
+#endif
+
     // it gets the initial result automatically when the main view model spawns it
     ui->textEdit->setText(QString::fromStdString(viewModel.getResult()));
 

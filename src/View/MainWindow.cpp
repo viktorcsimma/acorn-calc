@@ -13,6 +13,16 @@ MainWindow::MainWindow(MainViewModel& viewModel, QWidget *parent)
 {
     ui->setupUi(this);
 
+#if defined(WIN32) || defined(__APPLE__)
+    // Windows and OS X do not use the Button field of the colour palette;
+    // so we have to paint the special buttons using stylesheets.
+    // But setting the background colour is not too native-feeling here;
+    // so let's just give a bold text.
+    QString specialStyleSheet("font-weight: bold; color: unset");
+    ui->enterButton->setStyleSheet(specialStyleSheet);
+    ui->preciseOutputButton->setStyleSheet(specialStyleSheet);
+#endif
+
     // control buttons
     connect(ui->enterButton, &QPushButton::clicked, this, &MainWindow::enterClicked);
     connect(ui->preciseOutputButton, &QPushButton::clicked, this, &MainWindow::preciseOutputButtonClicked);
