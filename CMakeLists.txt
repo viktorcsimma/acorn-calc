@@ -120,8 +120,8 @@ elseif("Windows" STREQUAL ${CMAKE_SYSTEM_NAME})
   target_link_options(test PRIVATE -fuse-ld=lld -pthread -fno-PIC)
   # as flags, they would be added to the beginning of the command, where they get optimised out
   # see the documentation of ld
-  target_link_libraries(calc PRIVATE ws2_32 ntdll rpcrt4 dbghelp ucrt mpr userenv advapi32 authz kernel32 netapi32 ole32 shell32 user32 version unwind msvcrt)
-  target_link_libraries(test PRIVATE ws2_32 ntdll rpcrt4 dbghelp ucrt)
+  target_link_libraries(calc PRIVATE ws2_32 ntdll rpcrt4 dbghelp ucrt mpr userenv advapi32 authz kernel32 netapi32 ole32 shell32 user32 version unwind msvcrt winmm)
+  target_link_libraries(test PRIVATE ws2_32 ntdll rpcrt4 dbghelp ucrt winmm)
 else()
   message( FATAL_ERROR "Unsupported operating system: ${CMAKE_SYSTEM_NAME}" )
 endif()
