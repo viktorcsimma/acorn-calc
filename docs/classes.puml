@@ -1,219 +1,289 @@
 @startuml classes
 
-package View<<QML/C++>> #d1ffbd {
-    class QMainWindow {
-        - MainViewModel viewModel
-        ' the result also gets written here
-        - TextField inputTextField
-        - TextField errorTextField
-        - Rectangle numpad
-        - ListView historyItems
-        - QPushButton highPrecisionWindowButton
+package acorn-calc {
+    package View<<C++>> #d1ffbd {
+        ' everything has a Q in its name so that
+        ' we indicate these are actually Qt widgets
+        ' and depend on Qt libraries
+
+        class MainWindow {
+            - MainViewModel* viewModel
+
+            + void enterClicked() <<slot>>
+            + void settingsButtonClicked() <<slot>>
+            + void preciseOutputButtonClicked() <<slot>>
+        }
+
+        class HistoryItemWidget {
+            + HistoryItemWidget(const QString& command,
+                                const QString& result,
+                                QWidget* parent = nullptr);
+        }
+
+        class PreciseOutputWindow {
+            - PreciseOutputViewModel& viewModel
+
+            + PreciseOutputWindow(PreciseOutputViewModel& viewModel,
+                                  QWidget* parent = nullptr)
+            - void onEvaluationFinished() <<slot>>
+            + void evaluateButtonClicked() <<slot>>
+            + void enterKeyPressed() <<slot>>
+            + void evaluationFinished() <<signal>>
+            + ~PreciseOutputWindow()
+        }
+
+        class PrimaryLineEdit {
+            - bool containsResult_
+            - void setBold(bool enabled)
+
+            + PrimaryLineEdit(QWidget*& parent)
+            + bool containsResult() const
+
+            ~ virtual void keyPressEvent(QKeyEvent* event) <<override>>
+            + virtual void mousePressEvent(QMouseEvent* e) <<override>>
+
+            + void addToText(const QString&) <<slot>>
+            + void setResult(const QString&) <<slot>>
+            + void setBack() <<slot>>
+        }
+
+        MainWindow o--- "0..*" HistoryItemWidget
+        MainWindow o-- PrimaryLineEdit
+        MainWindow ..> PreciseOutputWindow
     }
 
-    class Rectangle
+    package ViewModel<<C++>> #d1ffbd {
+        class MainViewModel {
+            - HsCalcStateWrapper* calcStateWrapper
+            - std::string primaryText {getter}
+            - std::string secondaryText {getter}
+            - RealBaseType realBaseType
+            - ResultType resultType
 
-    class ListView
+            + MainViewModel(HsCalcStateWrapper calcStateWrapper)
+            + void enterCommand(const char* command)
+            + void switchMode(RealBaseType realBaseType)
+            + PreciseOutputViewModel spawnPreciseOutputViewModel() const
+            + void setPrecision(int precision)
+            + ~MainViewModel()
+        }
 
-    class QPushButton {
-        ' this is built into Qt
+        enum RealBaseType {
+            DyadicBase
+            RationalBase
+        }
+
+        enum ResultType {
+            Bool
+            Integer
+            Rational
+            Real
+        }
+
+        class PreciseOutputViewModel {
+            - HsCalcStateWrapper* const calcStateWrapper
+            - int precision {getter, setter}
+            - string result {getter}
+
+
+            + PreciseOutputViewModel(HsCalcStateWrapper* calcStateWrapper,
+                               int initialPrecision,
+                               std::string initialResult)
+            + void setPrecision(int precision)
+            + template<class F> void setPrecisionAsync(int precision, F onFinished)
+                <<F shall essentially be a void (void) function>>
+            + bool interruptEvaluation()
+        }
+
+        ' this will wrap the HsStablePtr
+        ' in a RAII way
+        class HsCalcStateWrapper {
+            - HsStablePtr calcStatePtr {const}
+            - RealBaseType baseType {const}
+            - std::thread evaluationThread
+            - bool isEvaluating
+
+            + HsCalcStateWrapper(RealBaseType baseType = DEFAULT_BASE_TYPE)
+            + std::string execCommand(const char* command, int precision) const
+            + std::string reevalCommand(int precision)
+            + template<class StringFunction> void reevalCommandAsync(int precision, StringFunction onFinish)
+                <<StringFunction shall essentially be a void(std::string) function>>
+            + bool interruptEvaluation()
+            + ~HsCalcStateWrapper()
+        }
+
+        MainWindow o-- MainViewModel
+        PreciseOutputWindow o-- PreciseOutputViewModel
+
+        MainViewModel o-- HsCalcStateWrapper
+        MainViewModel o-- ResultType
+        MainViewModel o-- RealBaseType
+        PreciseOutputViewModel o-- HsCalcStateWrapper
+        HsCalcStateWrapper o-- RealBaseType
     }
-
-    class QCalcButton {
-        - CalcButtonViewModel viewModel
-
-        + QCalcButton (const CalcButtonViewModel viewModel,
-            QWidget *parent = nullptr)
-        + {override} void click()
-    }
-
-    class QHistoryItem {
-        - QLabel expression
-        - QLabel result
-
-        + QHistoryItem (const HistoryItem historyItem,
-            QWidget *parent = nullptr)
-    }
-
-    class QHighPrecisionWindow {
-        ' the parent is a QMainWindow
-        - QMainWindow *parent
-        - HighPrecisionViewModel viewModel
-        - QLabel result
-        - SpinBox precisionSpinBox
-    }
-
-    QPushButton <|-- QCalcButton
-    QMainWindow o-- Rectangle
-    QMainWindow o-- ListView
-    QMainWindow o-- QPushButton
-    QMainWindow <-- QHighPrecisionWindow
-    Rectangle o-- QCalcButton
-    ListView o-- QHistoryItem
 }
 
-package ViewModel<<C++>> #d1ffbd {
-    class MainViewModel {
-        - HsStablePointer calcState
-        - AppRationalMode mode {getter}
-        - string result {getter, setter}
-        - std::vector<HistoryItem> historyItems
-        - std::vector<CalcButtonViewModel> buttons
+package acorn {
+    package Model<<Haskell>> #f9bfbf {
+        class acornInterruptEvaluation<<C>> #d1ffbd {
+            --
+            {static} void acornInterruptEvaluation()
+        }
 
-        + enterExpression 
+        class Platform {
+            --
+            {static} runInterruptibly :: IO a -> a -> IO a
+        }
+
+        class CalcState<aq implements AppRational> {
+            variables :: IORef (Map String (Value aq))  /'the names to the values'/
+            ' the results of the previous calculations; from the last to the first
+            ' I think these should be able to be accessed for later calculations
+            ' there will be a special syntax for this
+            history :: IORef [Value aq]
+            --
+            ' returns an error message, or the result to be printed
+            {static} execStatement :: Statement -> CalcState aq -> IO (Either String String)
+            ' returns an error message, or the value of the expression
+            {static} evalExp :: Exp -> CalcState aq -> Either String (Value aq)
+            {static} clear :: CalcState aq -> IO (CalcState aq)
+            --
+            <<in module Interaction>>
+            ' a pointer is going to be passed to the C++ code
+            ' it is the C++ side's responsibility to free it
+            ' by calling destruct
+            {static} initDyadic :: IO (StablePtr (CalcState Dyadic))
+            {static} initRational :: IO (StablePtr (CalcState Rational))
+            ' this returns an error message if something went wrong;
+            ' otherwise the result in a string with the given precision
+            {static} execCommand :: StablePtr (CalcState aq) -> CString -> CInt -> IO CString
+            ' reevaluates the previous result with a new precision
+            {static} reevalCommand :: StablePtr (CalcState aq) -> CInt -> IO CString
+            ' free the pointer
+            {static} destructCalcState :: StablePtr (CalcState aq) -> IO ()
+        }
+
+        HsCalcStateWrapper ..> acornInterruptEvaluation
+        CalcState ..> Platform
+        acornInterruptEvaluation ..> Platform
+        HsCalcStateWrapper o-- CalcState
     }
 
-    class HistoryItem {
-        - string expression {getter}
-        + HistoryItem(string expression, string result)
+    package Parser<<Agda>> #addfff {
+        class Parser<a> {
+            runParser : String -> Either String (a × String)
+            --
+            MkParser <<constructor>>
+        }
+
+        class Statement {
+            --
+            [constructors Empty, Eval, Assign, If and While]
+
+            [many parsers]
+            {static} pStatement : Parser Statement
+        }
+
+        class Exp {
+            [many constructors
+            with different numbers of children]
+            --
+            [many parsers]
+            {static} pExp : Parser Exp
+        }
+
+        class Value<real> {
+            --
+            <<constructors>>
+            {static} VBool : Bool -> Value real
+            {static} VInt : Int -> Value real
+            {static} VRat : Rational -> Value real
+            {static} VReal : C aq -> Value real
+        }
+
+        Platform ..> Value /' it interrupts its evaluation '/
+        CalcState ..> Statement
+        CalcState ..> Exp
+        Parser ..> Statement
+        Parser ..> Exp
+        CalcState o-- Value
+        Statement o-- Statement
+        Statement o-- Exp
+        Exp o-- Exp
     }
 
-    class CalcButtonViewModel {
-        - MainViewModel *parent
-        - string text {getter}
-        - string textToWrite {getter}
-        - int x, y {getter}
-        - int height, width {getter}
+    package Acorn<<Agda>> #addfff {
+        ' These are only the things
+        ' that are to be directly used in the calculator.
+        ' There is a complete plan
+        ' about all the types and typeclasses in Acorn.
 
-        + CalcButtonViewModel(string text, string textToWrite,
-            int x, int y, int height, int width)
-        + void click()
+        interface AppRational {
+            --
+            [...]
+            {static} shift : AppRational -> Int -> AppRational
+            {static} appDiv : AppRational -> AppRational -> Int -> AppRational
+            {static} appApprox : AppRational -> Int -> AppRational
+            ' rounds to a decimal with a given precision
+            {static} toDecimal : AppRational -> Nat -> Decimal
+        }
+
+        class C<aq implements AppRational> {
+            fun : PosRational -> aq
+        }
+
+        class PosRational {
+            ' this is actually S0 Rational
+            unwrap : Rational
+        }
+
+        class Rational {
+            num : Int
+            den : Int
+            --
+            {static} MkFrac : Int -> Int -> Rational <<constructor>>
+        }
+
+        class Dyadic {
+            mant : Int
+            expo : Int
+            --
+            {static} (:|^) : Int -> Int -> Dyadic <<constructor>>
+        }
+
+        class Decimal {
+            decMant : Int
+            decExpo : Int
+            --
+            {static} MkDec :: Int -> Int -> Decimal <<constructor>>
+            ' rounds to a given number of digits after the decimal point
+            {static} roundDecimal :: Decimal -> Int -> Decimal
+            {static} show :: Decimal -> String
+        }
+
+        class Int {
+            --
+            {static} pos : Nat -> Int <<constructor>>
+            {static} negsuc : Nat -> Int <<constructor>>
+        }
+
+        class Nat {
+            {static} zero : Nat <<constructor>>
+            {static} suc : Nat -> Nat <<constructor>>
+        }
+
+        Value o-- C: in real variables
+        C *-- AppRational: in a sense
+        PosRational *-- Rational
+        AppRational <|-- Dyadic
+        AppRational <|-- Rational
+        AppRational <|.. Decimal: not complete yet
+        C ..> PosRational
+        Dyadic *-- Int
+        Decimal *-- Int
+        Rational *-- Int
+        Int *-- Nat
     }
-
-    enum AppRationalMode {
-        Dyadic
-        Rational
-    }
-
-    class HighPrecisionViewModel {
-        - MainViewModel *mainViewModel
-        - string result {getter}
-        - int precision {getter}
-
-        + HighPrecisionViewModel(MainViewModel *mainViewModel,
-            int initialPrecision)
-        + void setPrecision(int precision)
-    }
-
-    QMainWindow o-- MainViewModel
-    QHighPrecisionWindow o-- HighPrecisionViewModel
-    MainViewModel o-- AppRationalMode
-    MainViewModel o-- CalcButtonViewModel
-    MainViewModel o-- HistoryItem
-    HighPrecisionViewModel --> MainViewModel
-}
-
-package Model<<Haskell>> #f9bfbf {
-    class Interaction<<static>> {
-        --
-        ' a pointer is going to be passed to the C++ code
-        ' it is the C++ side's responsibility to free it
-        ' by calling destruct
-        {static} initDyadic :: IO (StablePtr (CalcState Dyadic))
-        {static} initRational :: IO (StablePtr (CalcState Rational))
-        ' this returns an error message if something went wrong;
-        ' otherwise the result in a string with the given precision
-        {static} evalCommand :: StablePtr (CalcState aq) -> CString -> CInt -> IO CString
-        ' reevaluates the previous result with a new precision
-        {static} reevalWithPrecision :: StablePtr (CalcState aq) -> CInt -> IO CString
-        {static} destruct :: StablePtr (CalcState aq) -> IO ()
-    }
-
-    class CalcState<aq implements AppRational> {
-        variables :: IORef (Map String (Value aq))  /'the names to the values'/
-        ' the results of the previous calculations; from the last to the first
-        ' I think these should be able to be accessed for later calculations
-        ' there will be a special syntax for this
-        history :: IORef [Value aq]
-        --
-        ' returns an error message, or the result to be printed
-        {static} evalStatement :: Statement aq -> CalcState aq -> IO (Either String String)
-        ' returns an error message, or the value of the expression
-        {static} evalExp :: Exp aq -> CalcState aq -> Either String (Value aq)
-        {static} clear :: CalcState aq -> IO (CalcState aq)
-    }
-
-    Interaction ..> CalcState
-    MainViewModel ..> Interaction
-}
-
-package Parser<<Agda>> #addfff {
-    class Statement<aq implements AppRational> {
-        --
-        [constructors Assign, If and While]
-        {static} parseStatement :: String -> Either String (Statement aq)
-    }
-
-    class Exp<aq implements AppRational> {
-        [many constructors
-        with different numbers of children]
-        --
-        {static} parseExp :: String -> Either String (Exp aq)
-    }
-
-    class Value<aq implements AppRational> {
-        --
-        <<constructors>>
-        {static} BoolValue :: Bool -> Value aq
-        {static} IntValue :: Integer -> Value aq
-        {static} RationalValue :: Rational -> Value aq
-        {static} RealValue :: C aq -> Value aq
-    }
-
-    CalcState ..> Statement
-    CalcState ..> Exp
-    CalcState o-- Value
-    Statement o-- Statement
-    Statement o-- Exp
-    Exp o-- Exp
-}
-
-package Acorn<<Agda>> #addfff {
-    ' These are only the things
-    ' that are to be directly used in the calculator.
-    ' There is going to be a complete plan
-    ' about all the types and typeclasses in Acorn.
-
-    interface AppRational {
-        --
-        [...]
-        {static} shift :: AppRational -> Integer -> AppRational
-        {static} appDiv :: AppRational -> AppRational -> Integer -> AppRational
-        {static} appApprox :: AppRational -> Integer -> AppRational
-        ' rounds to a given number of decimals
-        {static} decimalForm :: AppRational -> Integer -> String
-    }
-
-    class C<aq implements AppRational> {
-        fun :: PosRational -> aq
-    }
-
-    class PosRational {
-        ' this is actually S0 Rational
-        unwrap :: Rational
-    }
-
-    class Rational {
-        num :: Integer
-        den :: Integer
-        --
-        {static} MkFrac :: Integer -> Integer -> Rational <<constructor>>
-    }
-
-    class Dyadic {
-        mant :: Integer
-        expo :: Integer
-        --
-        {static} (:|^) :: Integer -> Integer -> Dyadic <<constructor>>
-    }
-
-    Exp o-- C: in some literals
-    Value o-- C: in real variables
-    C *-- AppRational: in a sense
-    PosRational *-- Rational
-    AppRational <|-- Dyadic
-    AppRational <|-- Rational
-    C ..> PosRational
 }
 
 @enduml
