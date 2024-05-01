@@ -6,14 +6,7 @@
 #include <catch2/reporters/catch_reporter_event_listener.hpp>
 #include <catch2/reporters/catch_reporter_registrars.hpp>
 
-/* this will be nice for a test case
-{
-    HsCalcStateWrapper calcStateWrapper(DyadicBase);
-    calcStateWrapper.execCommand("pi", 10);
-    calcStateWrapper.reevalCommandAsync(100000, [](std::string result) {printf("%s\n", result.c_str());});
-    calcStateWrapper.interruptEvaluation();
-}
-*/
+// TODO: some test cases for the interruption mechanism
 
 // We will use these quite often.
 // See https://stackoverflow.com/questions/4770985/how-to-check-if-a-string-starts-with-another-string-in-c/4770992#4770992.
@@ -68,11 +61,11 @@ TEST_CASE("HsCalcStateWrapper") {
 
     SECTION("checking types") {
         std::string result = calcStateWrapper.execCommand("t = 3 == 5", 10);
-        REQUIRE(0 == strcmp("False :: Bool", result.c_str()));
+        REQUIRE("False :: Bool" == result);
         result = calcStateWrapper.execCommand("t = 5 - 2", 10);
-        REQUIRE(0 == strcmp("3 :: Integer", result.c_str()));
+        REQUIRE("3 :: Integer" == result);
         result = calcStateWrapper.execCommand("t = t / 5", 10);
-        REQUIRE(0 == strcmp("0.6 :: Rational", result.c_str()));
+        REQUIRE("0.6 :: Rational" == result);
         result = calcStateWrapper.execCommand("t = sqrt(t)", 10);
         REQUIRE(startsWith(result.c_str(), "0.56"));
         REQUIRE(endsWith(result.c_str(), " :: Real"));
@@ -80,9 +73,9 @@ TEST_CASE("HsCalcStateWrapper") {
 
     SECTION("handling whitespace while parsing") {
         std::string result = calcStateWrapper.execCommand("t=3==5", 10);
-        REQUIRE(0 == strcmp("False :: Bool", result.c_str()));
+        REQUIRE("False :: Bool" == result);
         result = calcStateWrapper.execCommand("        t=3 ==5     ", 10);
-        REQUIRE(0 == strcmp("False :: Bool", result.c_str()));
+        REQUIRE("False :: Bool" == result);
         result = calcStateWrapper.execCommand("sqrt      ( 2 )", 10);
         REQUIRE(!startsWith(result.c_str(), "error"));
         result = calcStateWrapper.execCommand("sqrt(2)", 10);
@@ -97,24 +90,24 @@ TEST_CASE("HsCalcStateWrapper") {
 
     SECTION("creating a variable and manipulating it") {
         std::string result = calcStateWrapper.execCommand("t = 5", 10);
-        REQUIRE(0 == strcmp("5 :: Integer", result.c_str()));
+        REQUIRE("5 :: Integer" == result);
         result = calcStateWrapper.execCommand("t = 10", 10);
-        REQUIRE(0 == strcmp("10 :: Integer", result.c_str()));
+        REQUIRE("10 :: Integer" == result);
         result = calcStateWrapper.execCommand("t = t + 1", 10);
-        REQUIRE(0 == strcmp("11 :: Integer", result.c_str()));
+        REQUIRE("11 :: Integer" == result);
         result = calcStateWrapper.execCommand("x = t / 2", 10);
-        REQUIRE(0 == strcmp("5.5 :: Rational", result.c_str()));
+        REQUIRE("5.5 :: Rational" == result);
         result = calcStateWrapper.execCommand("t = sqrt(t - 9) + t", 10);
-        REQUIRE(0 == strcmp("12.4142135624", result.c_str())); // beware, it should be rounded upwards!
+        REQUIRE("12.4142135624 :: Real" == result); // beware, it should be rounded upwards!
     }
 
     SECTION("illegal assignment does not have side effects") {
         calcStateWrapper.execCommand("t = 5", 10);
         std::string result = calcStateWrapper.execCommand("t = asdasdasd", 10);
-        REQUIRE(0 == strcmp("error while executing statement: error while evaluating value to assign: asd is undefined",
-                            result.c_str()));
+        REQUIRE("error while executing statement; while evaluating value to assign: asdasdasd is undefined"
+                            == result);
         result = calcStateWrapper.execCommand("t", 10);
-        REQUIRE(0 == strcmp("5 :: Integer", result.c_str()));
+        REQUIRE("5 :: Integer" == result);
     }
 
     SECTION("reevaluations") {
@@ -124,12 +117,12 @@ TEST_CASE("HsCalcStateWrapper") {
         }
         SECTION("with greater precision") {
             result = calcStateWrapper.reevalCommand(50);
-            REQUIRE(0 == strcmp("3.14159265358979323846264338327950288419716939937511", // beware, it should be rounded upwards!
-                                result.c_str()));
+            REQUIRE("3.14159265358979323846264338327950288419716939937511 :: Real" // beware, it should be rounded upwards!
+                                == result);
         }
         SECTION("with smaller precision") {
             result = calcStateWrapper.reevalCommand(5);
-            REQUIRE(0 == strcmp("3.14159", result.c_str()));
+            REQUIRE("3.14159 :: Real" == result);
         }
     }
 
@@ -170,17 +163,17 @@ TEST_CASE("MainViewModel") {
 
     SECTION("displaying result of legal evaluations and assignments") {
         mainViewModel.enterCommand("3 == 5");
-        REQUIRE(0 == strcmp("False", mainViewModel.getPrimaryText().c_str()));
-        REQUIRE(0 == strcmp("Bool", mainViewModel.getSecondaryText().c_str()));
+        REQUIRE("False" == mainViewModel.getPrimaryText());
+        REQUIRE("Bool" == mainViewModel.getSecondaryText());
         mainViewModel.enterCommand("t = 5 - 2");
-        REQUIRE(0 == strcmp("3", mainViewModel.getPrimaryText().c_str()));
-        REQUIRE(0 == strcmp("Integer", mainViewModel.getSecondaryText().c_str()));
+        REQUIRE("3" == mainViewModel.getPrimaryText());
+        REQUIRE("Integer" == mainViewModel.getSecondaryText());
         mainViewModel.enterCommand("t = t / 5");
-        REQUIRE(0 == strcmp("0.6", mainViewModel.getPrimaryText().c_str()));
-        REQUIRE(0 == strcmp("Rational", mainViewModel.getSecondaryText().c_str()));
+        REQUIRE("0.6" == mainViewModel.getPrimaryText());
+        REQUIRE("Rational" == mainViewModel.getSecondaryText());
         mainViewModel.enterCommand("t = sqrt(t)");
         REQUIRE(startsWith(mainViewModel.getPrimaryText().c_str(), "0.56"));
-        REQUIRE(0 == strcmp("Real", mainViewModel.getSecondaryText().c_str()));
+        REQUIRE("Real" == mainViewModel.getSecondaryText());
     }
     // TODO: other statement types?
 
@@ -188,8 +181,8 @@ TEST_CASE("MainViewModel") {
         mainViewModel.enterCommand("3 == 5");
         mainViewModel.enterCommand("3 / 0");
         // the command remains in the primary textbox
-        REQUIRE(0 == strcmp("error while executing statement: error while evaluating expression: division by integer 0",
-                            mainViewModel.getSecondaryText().c_str()));
+        REQUIRE("error while executing statement; while evaluating expression: division by integer 0"
+                == mainViewModel.getSecondaryText());
     }
 
     SECTION("it still works after switching base type") {
@@ -197,32 +190,32 @@ TEST_CASE("MainViewModel") {
         mainViewModel.switchMode(RationalBase);
         mainViewModel.enterCommand("sqrt(2)");
         REQUIRE(startsWith(mainViewModel.getPrimaryText().c_str(), "1.41"));
-        REQUIRE(0 == strcmp("Real", mainViewModel.getSecondaryText().c_str()));
+        REQUIRE("Real" == mainViewModel.getSecondaryText());
     }
 
     SECTION("spawning a PreciseOutputViewModel") {
         mainViewModel.enterCommand("pi");
         PreciseOutputViewModel preciseOutputViewModel = mainViewModel.spawnPreciseOutputViewModel();
-        REQUIRE(0 == strcmp("3.1415926535", preciseOutputViewModel.getResult().c_str()));
+        REQUIRE("3.1415926536" == preciseOutputViewModel.getResult());
 
         // TODO: same output immediately after initialisation
 
         SECTION("reevaluation with same precision does not change output") {
             preciseOutputViewModel.setPrecision(10);
-            REQUIRE(0 == strcmp(mainViewModel.getPrimaryText().c_str(),
-                                preciseOutputViewModel.getResult().c_str()));
+            REQUIRE(mainViewModel.getPrimaryText()
+                    == preciseOutputViewModel.getResult());
         }
 
         // TODO: rewrite these for significant digits, when this is done
         // also check the value itself
         SECTION("reevaluation with larger precision") {
             preciseOutputViewModel.setPrecision(50);
-            REQUIRE(0 == strcmp("3.14159265358979323846264338327950288419716939937511",
-                                preciseOutputViewModel.getResult().c_str()));
+            REQUIRE("3.14159265358979323846264338327950288419716939937511"
+                    == preciseOutputViewModel.getResult());
         }
         SECTION("reevaluation with smaller precision") {
             preciseOutputViewModel.setPrecision(5);
-            REQUIRE(0 == strcmp("3.14159", preciseOutputViewModel.getResult().c_str()));
+            REQUIRE("3.14159" == preciseOutputViewModel.getResult());
         }
     }
 
