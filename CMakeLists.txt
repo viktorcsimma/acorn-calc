@@ -108,8 +108,10 @@ target_include_directories(test
 # I don't know why, but with these options, it does not link the system libraries by itself;
 # so they need to be named explicitly.
 if("Linux" STREQUAL ${CMAKE_SYSTEM_NAME} OR "Darwin" STREQUAL ${CMAKE_SYSTEM_NAME})
-  target_link_options(calc PRIVATE -fuse-ld=gold -no-pie -fno-PIC -lstdc++ -ltinfo -lrt -lutil -ldl -lpthread -lgmp)
-  target_link_options(test PRIVATE -fuse-ld=gold -no-pie -fno-PIC -lstdc++ -ltinfo -lrt -lutil -ldl -lpthread -lgmp)
+  target_link_options(calc PRIVATE -no-pie)
+  target_link_options(test PRIVATE -no-pie)
+  target_link_libraries(calc PRIVATE dl pthread gmp)
+  target_link_libraries(test PRIVATE dl pthread gmp)
   if(CMAKE_BUILD_TYPE MATCHES RELEASE)
       # we tell the dynamic linker to search for shared libraries in the folder of the executable itself
       # this way, we can bundle the remaining libraries with the application
