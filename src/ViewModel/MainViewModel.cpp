@@ -3,7 +3,7 @@
 MainViewModel::MainViewModel(RealBaseType realBaseType, int precision):
     calcStateWrapper(new HsCalcStateWrapper(realBaseType)),
     primaryText("0"), secondaryText(""), realBaseType(realBaseType),
-    precision(precision), resultType(Integer), historyItems() {}
+    precision(precision), resultType(Integer) {}
 
 // Separates the result itself from the type
 // in case of a valid result.
@@ -24,7 +24,6 @@ void MainViewModel::enterCommand(const char* command) {
         primaryText = result.substr(0, cutIndex);
         secondaryText = result.substr(cutIndex + RESULT_TYPE_SEPARATOR.length());
         resultType = stringToResultType(secondaryText.c_str());
-        historyItems.push_back(HistoryItem(command, result));
     }
 }
 
@@ -38,7 +37,6 @@ void MainViewModel::switchMode(RealBaseType realBaseType) {
         secondaryText = "";
         this->realBaseType = realBaseType;
         resultType = Integer;
-        historyItems.clear();
     }
 }
 

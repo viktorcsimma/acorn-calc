@@ -5,7 +5,6 @@
 #include <vector>
 
 #include "ResultType.hpp"
-#include "HistoryItem.hpp"
 #include "HsCalcStateWrapper.hpp"
 #include "PreciseOutputViewModel.hpp"
 
@@ -23,7 +22,6 @@ class MainViewModel {
         // The default precision of results.
         int precision;
         ResultType resultType;
-        std::vector<HistoryItem> historyItems;
 
     public:
         // This automatically constructs a HsCalcStateWrapper
