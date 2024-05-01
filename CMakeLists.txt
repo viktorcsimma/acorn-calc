@@ -87,10 +87,10 @@ target_link_libraries(test PRIVATE Acorn::Acorn)
 # For some reason, on Windows, Interaction.o gets corrupted when copied into the library;
 # so it has to be included separately.
 # See my own question at
-# https://stackoverflow.com/questions/78260754/ghc-staticlib-with-ffi-on-windows-tries-to-link-an-executable-with-foreign-ex/78261321#78261321.
+# https://stackoverflow.com/questions/78260754/ghc-libraries-with-ffi-on-windows-have-foreign-export-symbols-missing.
 if("Windows" STREQUAL ${CMAKE_SYSTEM_NAME})
-  target_link_libraries(calc PRIVATE "C:/Program Files (x86)/Acorn/lib/Interaction.o")
-  target_link_libraries(test PRIVATE "C:/Program Files (x86)/Acorn/lib/Interaction.o")
+  target_link_libraries(calc PRIVATE "${CMAKE_INSTALL_PREFIX}/../Acorn/lib/Interaction.o")
+  target_link_libraries(test PRIVATE "${CMAKE_INSTALL_PREFIX}/../Acorn/lib/Interaction.o")
 endif()
 
 target_include_directories(calc
@@ -116,11 +116,11 @@ if("Linux" STREQUAL ${CMAKE_SYSTEM_NAME} OR "Darwin" STREQUAL ${CMAKE_SYSTEM_NAM
       target_link_options(calc PRIVATE -rpath=.)
   endif()
 elseif("Windows" STREQUAL ${CMAKE_SYSTEM_NAME})
-  target_link_options(calc PRIVATE -fuse-ld=lld -pthread -fno-PIC)
-  target_link_options(test PRIVATE -fuse-ld=lld -pthread -fno-PIC)
+  target_link_options(calc PRIVATE -pthread -fno-PIC)
+  target_link_options(test PRIVATE -pthread -fno-PIC)
   # as flags, they would be added to the beginning of the command, where they get optimised out
   # see the documentation of ld
-  target_link_libraries(calc PRIVATE ws2_32 ntdll rpcrt4 dbghelp ucrt mpr userenv advapi32 authz kernel32 netapi32 ole32 shell32 user32 version unwind msvcrt winmm)
+  target_link_libraries(calc PRIVATE ntdll rpcrt4 dbghelp ucrt msvcrt)
   target_link_libraries(test PRIVATE ws2_32 ntdll rpcrt4 dbghelp ucrt winmm)
 else()
   message( FATAL_ERROR "Unsupported operating system: ${CMAKE_SYSTEM_NAME}" )
