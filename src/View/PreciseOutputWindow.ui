@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>High precision output</string>
+   <string>Precise output</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>

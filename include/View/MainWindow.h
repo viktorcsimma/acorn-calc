@@ -32,5 +32,8 @@ private:
     // This refers to the same object throughout the entire existence of the window;
     // mode changes are achieved by changing the HsCalcStateWrapper instance under the view model.
     MainViewModel& viewModel;
+
+    // Returns the number of current history items.
+    int numberOfHistoryItems() const;
 };
 #endif // MAINWINDOW_H

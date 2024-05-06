@@ -16,10 +16,22 @@ class HistoryItemWidget: public QFrame {
 
 public:
     // Sets the two labels with the parameters given.
-    HistoryItemWidget(const QString& command, const QString& result, QWidget* parent = nullptr);
+    HistoryItemWidget(int id, const QString& command, const QString& result, QWidget* parent = nullptr);
+    // The first one has 1 as its id, the second 2 etc.
+    // For getting the index which has to be written into history[.],
+    // we have to subtract this from the number of items.
+    int getId() const {return id;};
+
+protected:
+    // This will emit the clicked() signal.
+    virtual void mouseReleaseEvent(QMouseEvent* event) override;
 
 private:
     Ui::HistoryItemWidget *ui;
+    int id;
+
+signals:
+    void clicked();
 };
 
 #endif // HISTORYITEMWIDGET_H

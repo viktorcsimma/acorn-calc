@@ -95,17 +95,24 @@ void MainWindow::enterClicked()
             ui->primaryLineEdit->setResult(QString::fromStdString(viewModel.getPrimaryText()));
 
             // adding item to history list
-            ui->historyVerticalLayoutWidget->layout()->addWidget(
-                new HistoryItemWidget(QString::fromStdString(command),
-                                      ui->primaryLineEdit->text() + " :: " + ui->secondaryOutputLabel->text(), ui->historyVerticalLayoutWidget)
-                );
+            const int numberOfItemsBefore = numberOfHistoryItems();
+            HistoryItemWidget* newWidget =  new HistoryItemWidget(
+                numberOfItemsBefore + 1,
+                QString::fromStdString(command),
+                ui->primaryLineEdit->text() + " :: " + ui->secondaryOutputLabel->text(), ui->historyVerticalLayoutWidget
+            );
+            ui->historyVerticalLayoutWidget->layout()->addWidget(newWidget);
+            connect(newWidget, &HistoryItemWidget::clicked,
+                    ui->primaryLineEdit, [=](){
+                ui->primaryLineEdit->addToText("history[" + QString::number(numberOfHistoryItems() - newWidget->getId()) + "]");
+            });
         }
     }
 }
 
 void MainWindow::settingsButtonClicked()
 {
-
+    throw "not implemented";
 }
 
 void MainWindow::preciseOutputButtonClicked()
@@ -119,4 +126,8 @@ void MainWindow::preciseOutputButtonClicked()
 
     // and when it closes:
     ui->primaryLineEdit->setFocus();
+}
+
+int MainWindow::numberOfHistoryItems() const {
+    return ui->historyVerticalLayoutWidget->layout()->count();
 }
