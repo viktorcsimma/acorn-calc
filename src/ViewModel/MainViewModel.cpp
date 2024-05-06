@@ -1,16 +1,19 @@
 #include "ViewModel/MainViewModel.hpp"
 
+#include <cstring>
+
 MainViewModel::MainViewModel(RealBaseType realBaseType, int precision):
     calcStateWrapper(new HsCalcStateWrapper(realBaseType)),
     primaryText("0"), secondaryText(""), realBaseType(realBaseType),
-    precision(precision), resultType(Integer) {}
+    precision(precision) {}
 
 // Separates the result itself from the type
 // in case of a valid result.
-const std::string RESULT_TYPE_SEPARATOR = " :: ";
+const char* RESULT_TYPE_SEPARATOR = " :: ";
+const int RESULT_TYPE_SEPARATOR_LENGTH = strlen(RESULT_TYPE_SEPARATOR);
 // If this is at the beginnning of the result string,
 // that indicates there has been an error.
-const std::string ERROR_MARKER = "error";
+const char* ERROR_MARKER = "error";
 
 void MainViewModel::enterCommand(const char* command) {
     std::string result = calcStateWrapper->execCommand(command, precision);
@@ -22,8 +25,7 @@ void MainViewModel::enterCommand(const char* command) {
         int cutIndex = result.find(RESULT_TYPE_SEPARATOR);
         // break into two substrings
         primaryText = result.substr(0, cutIndex);
-        secondaryText = result.substr(cutIndex + RESULT_TYPE_SEPARATOR.length());
-        resultType = stringToResultType(secondaryText.c_str());
+        secondaryText = result.substr(cutIndex + RESULT_TYPE_SEPARATOR_LENGTH);
     }
 }
 
@@ -36,7 +38,6 @@ void MainViewModel::switchMode(RealBaseType realBaseType) {
         primaryText = "0";
         secondaryText = "";
         this->realBaseType = realBaseType;
-        resultType = Integer;
     }
 }
 

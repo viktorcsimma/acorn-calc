@@ -2,9 +2,7 @@
 #define MAIN_VIEW_MODEL_HPP_
 
 #include <string>
-#include <vector>
 
-#include "ResultType.hpp"
 #include "HsCalcStateWrapper.hpp"
 #include "PreciseOutputViewModel.hpp"
 
@@ -21,7 +19,6 @@ class MainViewModel {
         RealBaseType realBaseType;
         // The default precision of results.
         int precision;
-        ResultType resultType;
 
     public:
         // This automatically constructs a HsCalcStateWrapper
