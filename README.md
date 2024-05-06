@@ -4,6 +4,14 @@ A graphical exact-real calculator written in Qt
 that works with the [Acorn](https://github.com/viktorcsimma/acorn) library
 and is capable of printing results with an arbitrary precision.
 
+## Binary distribution
+
+Binaries can be downloaded both
+[for Linux](https://csimmaviktor.web.elte.hu/calc_linux.zip) and
+[for Windows](https://csimmaviktor.web.elte.hu/calc_windows.zip).
+After extracting, AcornCalc can be started
+by `calc.sh` or `calc.exe`.
+
 ## Building from source
 
 You will need:
