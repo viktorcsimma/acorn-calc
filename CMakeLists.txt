@@ -105,7 +105,7 @@ target_include_directories(test
                            "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
 )
 
-# I don't know why, but with these options, it does not link the system libraries by itself;
+# I don't know why, but with these options, it does not link some system libraries by itself;
 # so they need to be named explicitly.
 if("Linux" STREQUAL ${CMAKE_SYSTEM_NAME} OR "Darwin" STREQUAL ${CMAKE_SYSTEM_NAME})
   target_link_options(calc PRIVATE -no-pie)
