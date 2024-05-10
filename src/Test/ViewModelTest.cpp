@@ -67,7 +67,7 @@ TEST_CASE("HsCalcStateWrapper") {
         result = calcStateWrapper.execCommand("t = t / 5", 10);
         REQUIRE("0.6 :: Rational" == result);
         result = calcStateWrapper.execCommand("t = sqrt(t)", 10);
-        REQUIRE(startsWith(result.c_str(), "0.56"));
+        REQUIRE(startsWith(result.c_str(), "0.77"));
         REQUIRE(endsWith(result.c_str(), " :: Real"));
     }
 
@@ -126,6 +126,41 @@ TEST_CASE("HsCalcStateWrapper") {
         }
     }
 
+    SECTION("illegal operations") {
+        std::string result = calcStateWrapper.execCommand("pi + True", 10);
+        REQUIRE("error while executing statement; while evaluating expression: operator '+' is not applicable to booleans"
+                == result);
+        result = calcStateWrapper.execCommand("5 / 0", 10);
+        REQUIRE("error while executing statement; while evaluating expression: division by integer 0"
+                == result);
+        result = calcStateWrapper.execCommand("5 / 0.0", 10);
+        REQUIRE("error while executing statement; while evaluating expression: division by rational 0"
+                == result);
+        result = calcStateWrapper.execCommand("history[0]", 10);
+        REQUIRE("error while executing statement; while evaluating expression: index 0 is too large"
+                == result);
+
+        // real comparisons are not yet added here,
+        // as I would like to work on them later
+    }
+
+    SECTION("type conversions") {
+        std::string result = calcStateWrapper.execCommand("5 + 2 / 3", 10);
+        REQUIRE("5.6666666667 :: Rational"
+                == result);
+        result = calcStateWrapper.execCommand("0.75 + 5", 10);
+        REQUIRE("5.75 :: Rational"
+                == result);
+        result = calcStateWrapper.execCommand("pi + 5", 10);
+        REQUIRE("8.1415926536 :: Real"
+                == result);
+        result = calcStateWrapper.execCommand("0.1 + sqrt(4 / 2)", 10);
+        REQUIRE("1.5142135624 :: Real"
+                == result);
+    }
+
+    /*
+    // Some test cases for when we develop control sequences to an official feature.
     SECTION("legal if statements (both true and false)") {}
 
     SECTION("an illegal if statement has no side effects") {}
@@ -136,9 +171,8 @@ TEST_CASE("HsCalcStateWrapper") {
 
     SECTION("a runtime error in a while statement – what does it do?") {}
 
-    SECTION("operations with different types") {}
-
     SECTION("value of some expressions") {}
+    */
 }
 
 TEST_CASE("MainViewModel") {
@@ -172,7 +206,7 @@ TEST_CASE("MainViewModel") {
         REQUIRE("0.6" == mainViewModel.getPrimaryText());
         REQUIRE("Rational" == mainViewModel.getSecondaryText());
         mainViewModel.enterCommand("t = sqrt(t)");
-        REQUIRE(startsWith(mainViewModel.getPrimaryText().c_str(), "0.56"));
+        REQUIRE(startsWith(mainViewModel.getPrimaryText().c_str(), "0.77"));
         REQUIRE("Real" == mainViewModel.getSecondaryText());
     }
     // TODO: other statement types?

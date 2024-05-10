@@ -7,8 +7,8 @@
 #include <catch2/catch_session.hpp>
 
 int main( int argc, char* argv[] ) {
-  hs_init(&argc, &argv);
-  int result = Catch::Session().run( argc, argv );
-  hs_exit();
-  return result;
+    hs_init(&argc, &argv);
+    int result = Catch::Session().run( argc, argv );
+    hs_exit();
+    return result;
 }
