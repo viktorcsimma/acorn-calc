@@ -32,6 +32,10 @@ and build Qt from source with it
 (Another option is to make GHC use a user-specified backend;
 I have not tried that yet.)
 
+I recommend Qt Creator for starting the build process.
+Create the kit with the appropriate C/C++ compilers
+and the Qt binaries built with them.
+
 ## Deployment
 
 For me, the most sympathetic solution was to link the executable statically
@@ -53,7 +57,7 @@ Then build the release executable with this Qt installation.
 For a bundle that works on other machines,
 you have to include certain Linux shared libraries.
 But remember _not_ to include every dependency `ldd` lists,
-as these would trump system-specific libraries.
+as some of them would trump system-specific libraries.
 
 [This bundle](https://csimmaviktor.web.elte.hu/calc_linux.zip)
 seems to work.
