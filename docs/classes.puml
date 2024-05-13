@@ -47,7 +47,7 @@ package acorn-calc {
             + void setBack() <<slot>>
         }
 
-        MainWindow o--- "0..*" HistoryItemWidget
+        MainWindow o- "0..*" HistoryItemWidget
         MainWindow o-- PrimaryLineEdit
         MainWindow ..> PreciseOutputWindow
     }
@@ -68,17 +68,17 @@ package acorn-calc {
             + ~MainViewModel()
         }
 
-        enum RealBaseType {
-            DyadicBase
-            RationalBase
-        }
+        'enum RealBaseType {
+        '    DyadicBase
+        '    RationalBase
+        '}
 
-        enum ResultType {
-            Bool
-            Integer
-            Rational
-            Real
-        }
+        'enum ResultType {
+        '    Bool
+        '    Integer
+        '    Rational
+        '    Real
+        '}
 
         class PreciseOutputViewModel {
             - HsCalcStateWrapper* const calcStateWrapper
@@ -115,11 +115,13 @@ package acorn-calc {
         MainWindow o-- MainViewModel
         PreciseOutputWindow o-- PreciseOutputViewModel
 
+        MainViewModel .> PreciseOutputViewModel
+
         MainViewModel o-- HsCalcStateWrapper
-        MainViewModel o-- ResultType
-        MainViewModel o-- RealBaseType
+        'MainViewModel o-- ResultType
+        'MainViewModel o-- RealBaseType
         PreciseOutputViewModel o-- HsCalcStateWrapper
-        HsCalcStateWrapper o-- RealBaseType
+        'HsCalcStateWrapper o-- RealBaseType
     }
 }
 
@@ -212,7 +214,7 @@ package acorn {
         Exp o-- Exp
     }
 
-    package Acorn<<Agda>> #addfff {
+    package Arithmetic<<Agda>> #addfff {
         ' These are only the things
         ' that are to be directly used in the calculator.
         ' There is a complete plan
